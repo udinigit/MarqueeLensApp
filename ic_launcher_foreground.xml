@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:translateX="20" android:translateY="20" android:scaleX="1.06" android:scaleY="1.06">
+
+    <group android:name="lenses">
+        <clip-path android:pathData="M6,33 a12,11 0 1,0 24,0 a12,11 0 1,0 -24,0 Z M34,33 a12,11 0 1,0 24,0 a12,11 0 1,0 -24,0 Z" />
+        <path android:fillColor="#2B2433" android:pathData="M0,0 L64,0 L64,64 L0,64 Z" />
+        <path android:fillColor="#E9B53C" android:pathData="M0,29.5 L64,24.5 L64,38.5 L0,43.5 Z" />
+        <path android:fillColor="#1F1A24" android:pathData="M3,29.3 L6,29.1 L6,31 L3,31.2 Z M11,28.7 L14,28.5 L14,30.4 L11,30.6 Z M19,28.1 L22,27.9 L22,29.8 L19,30 Z M27,27.4 L30,27.2 L30,29.1 L27,29.3 Z M35,26.8 L38,26.6 L38,28.5 L35,28.7 Z M43,26.2 L46,26 L46,27.9 L43,28.1 Z M51,25.6 L54,25.4 L54,27.3 L51,27.5 Z M59,25 L62,24.8 L62,26.7 L59,26.9 Z" />
+        <path android:fillColor="#1F1A24" android:pathData="M3,41.7 L6,41.5 L6,43.4 L3,43.6 Z M11,41.1 L14,40.9 L14,42.8 L11,43 Z M19,40.5 L22,40.3 L22,42.2 L19,42.4 Z M27,39.9 L30,39.7 L30,41.6 L27,41.8 Z M35,39.3 L38,39.1 L38,41 L35,41.2 Z M43,38.7 L46,38.5 L46,40.4 L43,40.6 Z M51,38.1 L54,37.9 L54,39.8 L51,40 Z M59,37.5 L62,37.3 L62,39.2 L59,39.4 Z" />
+        <path android:fillColor="#00000000" android:strokeColor="#FFF6DD" android:strokeWidth="1.6" android:strokeLineCap="round" android:pathData="M10,30 Q12,25 17,24 M38,30 Q40,25 45,24" />
+    </group>
+    <path android:fillColor="#00000000" android:strokeColor="#FFC94A" android:strokeWidth="2.6" android:pathData="M6,33 a12,11 0 1,0 24,0 a12,11 0 1,0 -24,0 Z M34,33 a12,11 0 1,0 24,0 a12,11 0 1,0 -24,0 Z" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFC94A" android:strokeWidth="2.6" android:strokeLineCap="round" android:pathData="M29.5,30 Q32,27.5 34.5,30" />
+    </group>
+</vector>

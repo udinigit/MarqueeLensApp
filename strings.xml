@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Marquee Lens</string>
+    <string name="a11y_label">Marquee Lens ratings</string>
+    <string name="a11y_description">Shows a floating button over streaming apps. When you tap it, Marquee Lens reads the film and series titles on the screen and shows their IMDb ratings on top. On a TV, a remote button you choose (≡ by default) shows the ratings, and the rating of the selected title can show in a corner; for that it watches remote presses, without recording them. It only sends the titles it found to look up ratings.</string>
+    <string name="tts_label">Marquee Lens (silent, for ratings)</string>
+    <string name="share_label">Ratings &amp; lists</string>
+</resources>

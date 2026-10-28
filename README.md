@@ -1,200 +1,130 @@
-# Marquee Lens: setup guide
+**New here? Start with [SETUP.md](SETUP.md).**
 
-Marquee Lens keeps lists of films and series with their IMDb ratings, where to watch them and what you've seen.
-On Android it can also show IMDb ratings **on top of streaming apps** (Netflix, Disney+, HBO Max, Prime Video, yes, HOT…),
-read posters with the phone's **camera**, and run on an **Android TV / NVIDIA Shield** with the remote.
+# Marquee Lens for Android
 
-Everything here is free for personal use. Plan about an hour the first time.
+The full Marquee Lens app (lists, camera, sharing, settings) **plus** an optional floating button over streaming apps
+(Netflix, Disney+, HBO Max, Prime Video, Apple TV, YouTube, yes, HOT, STINGTV, Partner TV…).
+Tap the button: the IMDb rating appears on every title on screen. Tap a rating: the same film sheet as in camera mode opens on top.
 
-```
-MarqueeLens/
-├── SETUP.md                  ← this guide
-├── README.md                 ← how the Android app is used, in more detail
-├── worker/marquee-lens-worker.js   ← your small server (Cloudflare Worker)
-├── web/marquee-lens.html     ← the same app as a web page (optional)
-├── app/ …                    ← the Android app's source
-└── .github/workflows/build.yml     ← builds the Android app on GitHub, for free
-```
+The app is the web app (`app/src/main/assets/index.html`, a copy of `web/marquee-lens.html`) running inside the APK, so both
+always look and work the same. When you change `web/marquee-lens.html`, copy it over `app/src/main/assets/index.html` before building.
 
----
+It reads titles the way screen readers do (Android's accessibility service), so it works even in apps that block screenshots, like Netflix.
+Hebrew titles are looked up by their Hebrew name on TMDB, then rated from IMDb.
+For apps that don't label their titles, it can fall back to a screenshot read by Gemini (Android 11+, only where the app allows screenshots).
 
-## 1. How it fits together
+## Build it online, free (no Android Studio needed)
+1. Sign in at github.com → **New repository** → name it `MarqueeLens` → **Private** is fine → **Create repository**.
+2. On the new repository page click **uploading an existing file**, and drag in **everything inside** the `MarqueeLensAndroid` folder
+   (including the `.github` folder — if your computer hides it, see the note below) → **Commit changes**.
+3. Open the **Actions** tab. A run called **Build APK** starts by itself (about 5 minutes).
+4. When it shows a green tick, open the run → under **Artifacts** download **MarqueeLens-apk** → unzip → `app-debug.apk`.
+5. Send the APK to your phone (Drive, email, WhatsApp to yourself…) and open it to install.
 
-```
- Phone / TV app ──invite code──▶ Your Cloudflare Worker ──your keys──▶ Gemini · OMDb · TMDB
-                                       │
-                                       └── D1 database: your lists (synced between devices) and 24-hour logs
-```
+Note: folders starting with a dot can be hidden. If `.github` didn't upload, in the repository click **Add file → Create new file**,
+type the name `.github/workflows/build.yml`, paste the contents of that file from this folder, and **Commit**.
+Free: unlimited for public repositories, 2,000 build minutes a month for private ones.
 
-The app never holds your API keys. It only has an **invite code**; the Worker keeps the keys as secrets and checks
-the code on every request. Each invite code (one per person) has its own lists.
+## Your signing key (so new builds install as updates)
+Android only installs a new build over the old one (keeping your lists) when both are signed with the same key.
+Set this up once, before your next build:
+1. In the GitHub repository: **Settings → Secrets and variables → Actions → New repository secret**.
+2. Name `SIGNING_KEY`, value: the long line from SETUP.md step 5 → **Add secret**.
+3. Again: name `SIGNING_PASSWORD`, value: your keystore password → **Add secret**.
+4. **Actions → Build APK → Run workflow.** The log's "Use your signing key" step says *Signing with your fixed key*.
+The first build with the key still needs the old app uninstalled once. After that, every new APK installs as an update.
+Keep your keystore and its password somewhere safe and private. If it's lost, the next build can't update the installed app.
+Never upload the key file itself to the repository; the secrets are enough.
 
-## 2. Accounts and keys you need
+## Build it in Android Studio instead (about 20 minutes the first time)
+1. Install **Android Studio** (free): developer.android.com/studio
+2. **File → Open** → choose this `MarqueeLensAndroid` folder. Let it finish "Gradle sync" (it downloads what it needs).
+3. Optional: to give friends a ready-made app, put your Worker address in `DEFAULT_SERVER` in **both**
+   `app/src/main/assets/index.html` and `app/src/main/java/com/marqueelens/Store.kt`.
+4. **Build → Build App Bundle(s) / APK(s) → Build APK(s)**. When it's done, click **locate**: the file is `app-debug.apk`.
+5. Copy the APK to your phone (or connect the phone with USB debugging and press ▶ Run) and install it.
+   Android will ask you to allow installing apps from that source.
 
-| What | Where | Notes |
-|---|---|---|
-| **GitHub** account | github.com | Builds the Android app for you |
-| **Cloudflare** account | dash.cloudflare.com | Free plan is enough |
-| **Gemini API key** | aistudio.google.com/apikey | Recognises posters and screenshots. Keep **billing off** on its Google project, so the worst case is running out of free quota, never a bill |
-| **OMDb API key** | omdbapi.com/apikey.aspx | Titles and IMDb ratings. Free tier: activate it from the email they send |
-| **TMDB key** | themoviedb.org/settings/api (after signing up) | Hebrew and other local titles, similar films, where to watch. Either the "API Key" or the "Read Access Token" works |
+## Set it up (on the phone)
+1. Open **Marquee Lens**. Choose **Invite code** or **My own keys** (OMDb; optional Gemini and TMDB, which Hebrew titles need) → Save.
+2. To use the overlay: **Settings** (top right) → *Ratings over streaming apps* → **Turn on** → *Installed apps* (or *Downloaded apps*)
+   → **Marquee Lens ratings** → On.
+3. **Android 13 and later:** if the switch is greyed out, open the phone's **Settings → Apps → Marquee Lens** → ⋮ (top right)
+   → **Allow restricted settings**, then try step 2 again. (Android adds this step for apps installed outside the Play Store.)
 
-## 3. Your server (Cloudflare Worker)
+## Use the overlay
+- Open a streaming app. The round button appears on the side. **Tap** it: ratings appear on the tiles and stay on while you browse:
+  they hide while you scroll and come back on the right posters when you stop. **Tap** the button again to turn them off
+  (white ring = ratings on).
+- **Tap a rating**: the film sheet opens over the app (add to a list, services, Wrong title?, More like this, IMDb). Back or swipe down closes it.
+- **Long-press a rating** if it isn't a film (a menu, a row name…): it's hidden in that app from then on.
+  The film sheet also has **Not a film · hide it**.
+- **Wrong title?** in the sheet: pick the right film, and the overlay remembers it for that text in that app.
+- **Drag** the button to move it (it snaps to the nearest side). **Long-press** it to hide it until you leave that app.
+  While a video plays (phone sideways, or sound for 10 s) the button keeps out of the way.
+- Configuration → Overlay → **How ratings appear**: **Bubble** (tap the button), **Automatic** (no button: ratings appear
+  by themselves) or **Shortcut** (no button: Android's accessibility shortcut, set in Accessibility → Marquee Lens ratings).
+- Settings → *Ratings over streaming apps*:
+  - **Show the bubble in:** switch any app on or off (e.g. YouTube off), or turn on *Any other app*.
+  - **Not a film:** see what's hidden, tap one to show it again, **Export filter / Import filter** (a .json file; backups include it too).
 
-### 3.1 Create it
-1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Create Worker** → name it `marquee-lens` → **Deploy**.
-2. **Edit code** → delete what's there → paste all of `worker/marquee-lens-worker.js` → **Deploy**.
-3. Note its address, like `https://marquee-lens.your-name.workers.dev`.
+## Share to Marquee Lens
+- Share a **screenshot** (from the gallery, or right after taking it) → **Marquee Lens · Ratings & lists**: the films in it are
+  recognised; one opens its details, several go through the review below.
+- Share **text** (Netflix's "Check out …", an IMDb link, a list of names) the same way.
+- **Add several at once** (under the add box on the Lists page, or ⋯): paste titles, one per line or with commas, English or
+  Hebrew → pick a list or a new one → each match is shown one by one (Add / Not this one / Skip) → "x/y added", with a
+  Search button for each title that wasn't found.
 
-### 3.2 Keys and invite codes
-Worker → **Settings** → **Variables and Secrets** → **Add**:
+## Lists, sharing and files
+Everything is under **Share & files** on the Lists page: send a list as a message or a file, save a file or spreadsheet,
+back up everything, open a file (list, spreadsheet, backup or overlay filter), or paste a shared link.
+Shared links need a web address: set `SHARE_BASE` in `index.html` to where the web app is hosted (e.g. your Netlify site);
+without it, messages carry the titles only and files still work.
 
-| Name | Type | Value |
-|---|---|---|
-| `GEMINI_KEY` | Secret | your Gemini key |
-| `OMDB_KEY` | Secret | your OMDb key |
-| `TMDB_KEY` | Secret | your TMDB key |
-| `INVITE_CODES` | Secret | `Me:Xr7kP2mQ9vTz, Dana:b4Lw8nYq3sHe` — a name, a colon, a code; commas between people |
-| `DAILY_AI_LIMIT` | Text | `100` (AI requests per person per day) |
-| `ALLOWED_ORIGINS` | Text | *Only if you put the web page on a site:* that site's address, e.g. `https://my-lens.netlify.app`. The Android app is always allowed |
+## On a TV (NVIDIA Shield, Android TV, Google TV)
+The same APK works on the TV. There is no floating button there; the remote does it:
+- In Netflix (or any app switched on in Settings), press **≡** on the remote: ratings appear on the titles and stay while you
+  browse with the remote as usual. **Back** turns them off.
+- Press **≡** again to pick one: **arrows** move between ratings, **OK** opens the film sheet, **≡** marks it *Not a film*,
+  **Back** returns to browsing.
+- While you browse, the rating of the selected title shows in the top-right corner (Settings can switch this off).
+- Settings → *Ratings button on the remote → Change* picks another button (press it), or *hold OK*.
+- In the app itself, the arrows move between buttons and OK presses them.
+- Nothing found? Settings → *Last overlay scan → View* shows what the TV app exposed; take a photo of it for support.
 
-Click **Deploy** after adding them.
+### Netflix on the TV
+Netflix's TV app draws its own screen and shares no titles with other apps, so ≡ finds nothing there. It does say the selected
+title aloud when a screen reader is on, and Marquee Lens can listen instead, silently:
+1. Marquee Lens → ⚙ → Overlay → *Netflix on this TV* → **Set up** → *Open speech settings* → Preferred engine →
+   **Marquee Lens (silent, for ratings)**.
+2. Turn on **TalkBack** (Settings → Device Preferences → Accessibility). Its voice now goes to Marquee Lens, so the TV stays quiet.
+3. In Netflix, move between titles: the rating of the selected one shows in the corner. Press **≡** for the full film sheet.
+To undo: choose your previous engine again (usually Google) and turn TalkBack off.
 
-> **Make invite codes long and random: 12 or more letters and digits.** Anyone who has your Worker's address could try
-> to guess codes; long ones can't be guessed. To remove someone, delete their entry and deploy.
+### Install on the Shield
+**Easiest (phone, no computer):** install **Send files to TV** from the Play Store on the phone and on the Shield.
+On the phone: Send → pick `app-debug.apk` → pick the Shield. On the Shield, open Send files to TV → the APK → Install.
+If asked, allow *Send files to TV* to install apps (it opens the setting; switch it on, press Back) and Install again.
 
-### 3.3 The database (lists sync and logs)
-1. **Storage & Databases** → **D1 SQL Database** → **Create** → name it `marquee-lists`.
-2. Worker → **Settings** → **Bindings** → **Add** → **D1 database** → variable name **`DB`** → choose `marquee-lists` → **Deploy**.
+**From a computer (skips Android's install restrictions):**
+1. Shield: Settings → Device Preferences → About → select **Build** and press OK 7 times.
+2. Back → Device Preferences → **Developer options** → **Network debugging** on. Note the IP address shown.
+3. Computer: download *SDK Platform-Tools* (developer.android.com/tools/releases/platform-tools), unzip, open a terminal there:
+   `adb connect 192.168.1.50:5555` (your Shield's IP) → on the TV choose *Always allow* → then `adb install -r app-debug.apk`
 
-The tables are created by themselves. Without this the app still works, but lists stay on each device and there are no logs.
+### Turn it on
+1. Shield: Settings → Device Preferences → **Accessibility** → **Marquee Lens ratings** → Enable → OK.
+2. Open **Marquee Lens** (Apps row on the home screen, or *See all apps*) → Settings → **Invite code** → type it → Save.
+   Tip: the **Google TV** app on your phone has a remote with a keyboard, much easier than typing with the remote.
 
-### 3.4 Daily AI limit per person (optional)
-1. **Storage & Databases** → **KV** → **Create** → name it `marquee-usage`.
-2. Worker → **Settings** → **Bindings** → **Add** → **KV namespace** → variable name **`USAGE`** → choose it → **Deploy**.
+## Privacy
+The screen is read only when you tap the button (or in Live mode), and only the titles it finds are sent to look up ratings.
+With an invite code, requests go through your Cloudflare Worker; your API keys never reach the phone.
 
-### 3.5 Check it
-Open `https://<your-worker-address>/me` in a browser. **"Invite code not recognized"** means it's running
-(a browser doesn't send a code).
-
-## 4. Put your Worker address into the app
-
-Search for `PUT YOUR WORKER ADDRESS HERE` and fill in your address (no slash at the end) in:
-
-1. `app/src/main/assets/index.html` — the app's screens
-2. `app/src/main/java/com/marqueelens/Store.kt` — the ratings over other apps
-3. `web/marquee-lens.html` — only if you'll use the web page
-
-```js
-const DEFAULT_SERVER = "https://marquee-lens.your-name.workers.dev";
-```
-
-If you skip this, the app asks for the server address on first start (under **More**).
-
-## 5. A signing key (recommended)
-
-Android only installs a new version over the old one (keeping your lists and settings) when both are signed with the
-same key. Without your own key, every build gets a random one and you'd have to uninstall before each update.
-
-Make one, once, on any computer with Java installed (`keytool` comes with it):
-
-```bash
-keytool -genkeypair -keystore marquee.keystore -storetype PKCS12 -alias marquee \
-  -keyalg RSA -keysize 2048 -validity 12000 -dname "CN=Marquee Lens"
-```
-
-Choose a password when asked (use it for both prompts). Then turn the file into one line of text:
-
-| System | Command |
-|---|---|
-| macOS | `base64 -i marquee.keystore` |
-| Linux | `base64 -w0 marquee.keystore` |
-| Windows (PowerShell) | `[Convert]::ToBase64String([IO.File]::ReadAllBytes("marquee.keystore"))` |
-
-In your GitHub repository (step 6): **Settings → Secrets and variables → Actions → New repository secret**:
-- `SIGNING_KEY` — that long line
-- `SIGNING_PASSWORD` — your password
-
-> **Keep `marquee.keystore` and its password private and backed up** (e.g. in a password manager).
-> **Never upload the keystore to the repository**; the secrets are enough. If it's lost, the next build can't update the
-> installed app (uninstall once and carry on with a new key).
-
-## 6. Build the Android app (on GitHub, free)
-
-1. github.com → **New repository** → name it `MarqueeLens` → **Private** → **Create**.
-2. **uploading an existing file** → drag in **everything inside** the `MarqueeLens` folder → **Commit changes**.
-   Folders starting with a dot (`.github`) are often hidden: if it didn't upload, use **Add file → Create new file**,
-   name it `.github/workflows/build.yml`, paste that file's contents and commit.
-3. **Actions** tab → **Build APK** runs by itself (about 5 minutes; or **Run workflow**).
-4. When it's green: open the run → **Artifacts** → download **MarqueeLens-apk** → unzip → `app-debug.apk`.
-
-The build log's "Use your signing key" step says whether your key was used.
-
-## 7. Install on the phone
-
-1. Send `app-debug.apk` to the phone (Drive, email…) and open it. Allow installing from that app when asked.
-2. Open **Marquee Lens**, enter your **invite code** → **Continue**.
-3. Step 2 is the overlay (ratings over streaming apps): **Turn on** → Accessibility → *Installed apps* / *Downloaded apps* →
-   **Marquee Lens ratings** → On.
-   - **Android 13+, the switch is greyed out ("restricted setting"):** try it once, then phone **Settings → Apps → Marquee Lens →
-     ⋮ → Allow restricted settings**, and switch it on again.
-4. Choose **How ratings appear** (Configuration → Overlay): **Bubble** (tap a button), **Automatic** (no button) or
-   **Shortcut** (Android's accessibility shortcut).
-
-Installing from a computer avoids the restricted-settings step: enable USB debugging and run `adb install app-debug.apk`.
-
-## 8. Install on a TV (NVIDIA Shield, Android TV, Google TV)
-
-The same APK works on the TV.
-
-1. Install **Send files to TV** from the Play Store on the phone and the TV; send the APK and install it on the TV.
-   (Or from a computer: TV Settings → Device Preferences → About → press *Build* 7 times → Developer options →
-   Network debugging, then `adb connect <TV-IP>:5555` and `adb install app-debug.apk`.)
-2. TV **Settings → Device Preferences → Accessibility → Marquee Lens ratings → Enable**.
-3. Open Marquee Lens (*See all apps*), enter the invite code. The **Google TV** app on your phone has a keyboard for this.
-4. In a streaming app press **≡** on the remote: ratings appear; **≡** again to choose one, **OK** for details, **Back** to hide.
-   Staying on a title for a second shows its rating in the corner. Hold **≡** for 3 seconds to report a problem.
-
-**Netflix on a TV** draws its own screen and shares no titles, so it needs one extra step: Marquee Lens →
-Configuration → Overlay → *Netflix on this TV* → **Set up** (choose Marquee Lens as the speech engine and turn on TalkBack;
-the TV stays quiet). On a TV with LG's or Samsung's own system (not Android) none of this is possible; use the phone's camera.
-
-## 9. The web page (optional)
-
-`web/marquee-lens.html` is the same app (lists, camera, sharing) for any browser. Put it on a free host
-(e.g. Netlify: **Add new site → Deploy manually** → drop the file, renamed `index.html`). Then:
-- add that address to `ALLOWED_ORIGINS` on the Worker;
-- to make shared list links from the Android app point to it, set `SHARE_BASE` in both HTML files to that address.
-
-## 10. Inviting people
-
-Add a `Name:code` pair to `INVITE_CODES`, deploy, and send them the APK (or the web address) and **their own** code.
-Each person has separate lists, and the daily AI limit counts per person.
-
-## 11. What's stored, and costs
-
-- **On the server (D1):** each person's lists (until deleted) and the app's logs for **24 hours**
-  (titles read and found, corrections, errors, problem reports — not what you type). Configuration → API →
-  *Problems and logs* → **Clear logs** deletes them.
-- **API keys** are only in the Worker's secrets.
-- **Costs:** nothing on the free plans at personal scale (Cloudflare's free Worker plan allows 100,000 requests a day).
-
-## 12. Troubleshooting
-
-| Problem | Fix |
-|---|---|
-| "Invite code not recognized" | Check `INVITE_CODES` (`Name:code`, commas between), the exact code (case matters), and **Deploy** after editing |
-| "List sync isn't set up on the server" | Step 3.3: the D1 binding must be named exactly `DB` |
-| A new build won't install over the old one | Signing key missing or different (step 5). Uninstall once, then updates work |
-| Overlay switch greyed out | Step 7.3, *Allow restricted settings* |
-| No ratings in an app | Configuration → Overlay → make sure that app is ticked; then Advanced → **Last overlay scan** shows what the app exposed |
-| Wrong film for a title | Open it → **Wrong title?** → pick the right one (remembered for that app) |
-| Something odd happened | Configuration → API → *Problems and logs* → **Report a problem** right away, then **Share logs** |
-
-## 13. Keeping it safe
-
-- Never commit `marquee.keystore`, its password, or your API keys. (`.gitignore` already excludes the keystore, but the
-  GitHub upload page ignores `.gitignore` — check what you drag in.)
-- In a private repository on a personal GitHub account, every collaborator can change the build and could read your
-  signing key through it. Only add people you fully trust; otherwise share a copy of the code instead.
-- Use long invite codes, and remove codes you no longer need.
+## Good to know
+- Publishing on Google Play would need an accessibility-use declaration and Google's review; this build is meant for installing yourself.
+- If an app updates its screens and stops exposing titles, the Gemini fallback (needs a Gemini key or the invite server) still works where screenshots are allowed.
+- Built for Android 8.0+ (Gemini fallback: Android 11+). No extra libraries: only Android and Kotlin.
+- The Camera tab works inside the app too (Android asks for camera permission the first time). Saying a title by voice isn't
+  available inside the app; type it instead.

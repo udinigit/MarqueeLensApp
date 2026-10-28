@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Marquee Lens as a silent speech engine (catches what Netflix on TV says, to show ratings) -->
+<tts-engine xmlns:android="http://schemas.android.com/apk/res/android" />
